@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <title> מוצרי כפתור</title>
+  <!-- <link rel="stylesheet" href="style.css"> -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<header class="bg-white shadow p-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold">מוצרים</h1>
+  <button id="cartBtn" class="bg-blue-600 text-white px-4 py-2 rounded">
+    עגלה (<span id="cartCount">0</span>)
+  </button>
+</header>
+
+<!-- Category Tabs -->
+<div id="categoryTabs" class="flex gap-2 p-4 overflow-x-auto"></div>
+
+<!-- Products -->
+<div id="categories" class="p-4"></div>
+
+<div id="cartModal"
+  class="fixed top-0 right-0 w-80 h-full bg-white shadow-lg
+         translate-x-full transition-transform duration-300 z-50">
+
+  <div class="p-4 flex justify-between items-center border-b">
+    <h2 class="text-lg font-bold">עגלה</h2>
+    <button onclick="toggleCart()">✕</button>
+  </div>
+
+  <div id="cartItems" class="p-4 space-y-2"></div>
+
+  <div class="p-4 border-t">
+    <input id="customerName"
+      placeholder="Your name"
+      class="border w-full p-2 rounded mb-3">
+
+    <button onclick="submitOrderToFireBase()"
+      class="bg-green-600 text-white w-full py-2 rounded">
+       שלח הזמנה
+    </button>
+  </div>
+</div>
+
+
+<script src="app.js"></script>
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+  class="fixed inset-0 bg-black/50 flex flex-col items-center justify-center
+         text-white text-center hidden z-50 transition-opacity">
+
+  <div
+    class="w-14 h-14 border-4 border-white border-t-transparent
+           rounded-full animate-spin mb-4">
+  </div>
+
+  <p class="text-lg font-semibold">טוען נתונים...</p>
+
+</div>
+
+</body>
+
+</html>
