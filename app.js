@@ -101,8 +101,8 @@ function productCard(p) {
   <div class="bg-white rounded shadow p-3 flex flex-col">
     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
   <img
-    src="/images/${p.catalog}.jpg"
-    onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
+    src="/${p.catalog}.jpg"
+    onerror="this.onerror=null; this.src='/kaftor_logo.png';"
     class="w-full h-full object-cover"
      onclick="openImage(this.src)"
   class="cursor-zoom-in"
@@ -312,3 +312,4 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
