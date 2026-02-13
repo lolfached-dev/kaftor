@@ -101,8 +101,8 @@ function productCard(p) {
   <div class="bg-white rounded shadow p-3 flex flex-col">
     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
   <img
-    src="images/${p.catalog}.jpg"
-    onerror="this.onerror=null; this.src='images/kaftor_logo.png';"
+    src="/images/${p.catalog}.jpg"
+    onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
     class="w-full h-full object-cover"
      onclick="openImage(this.src)"
   class="cursor-zoom-in"
@@ -150,7 +150,7 @@ function openImage(src) {
 
 function changeQty(barcode, delta) {
   const product = inventory[barcode];
-  if (!cart[barcode]) cart[barcode] = { name: product.name, qty: 0 };
+  if (!cart[barcode]) cart[barcode] = { name: product.name, qty: 0 ,price:product.price};
 
   if (delta === 1 && product.stock === 0) return;
   if (delta === -1 && cart[barcode].qty === 0) return;
@@ -212,11 +212,42 @@ function updateCart() {
   console.log(cart)
   document.getElementById('cartCount').innerText =
     Object.values(cart).reduce((a,b)=>a+b.qty,0);
-
+  let total = 0;
   const div = document.getElementById('cartItems');
   div.innerHTML = Object.keys(cart).map(barcode =>
-    `<div>${cart[barcode].name} x ${cart[barcode].qty}</div>`
+    
+    `<div class="flex justify-between items-center mb-2">
+        <span class="font-semibold">${cart[barcode].name}</span>
+        
+      </div>
+
+    <div class="flex items-center justify-between">
+
+        <div class="flex items-center gap-2">
+          <button onclick="changeQty('${barcode}', -1)"
+            class="bg-gray-300 px-2 rounded">−</button>
+
+          <span>${cart[barcode].qty}</span>
+
+          <button onclick="changeQty('${barcode}', 1)"
+            class="bg-gray-300 px-2 rounded">+</button>
+        </div>
+
+         <span class="font-semibold">
+           ${cart[barcode].price.replace("₪ ", "") * cart[barcode].qty} ₪
+        </span>
+        <button onclick="changeQty('${barcode}', ${-cart[barcode].qty})"
+          class="text-red-600 font-bold">🗑</button>
+      </div>
+    
+    `
   ).join('');
+  total = Object.values(cart)
+  .reduce((sum, item) => sum + item.price.replace("₪ ", "") * item.qty, 0);
+
+  document.getElementById('cartTotal').innerHTML = `<span class="font-semibold">
+           ${total.toFixed(2)} ₪
+        </span>`
 
 }
 // function submitOrder() {
@@ -274,6 +305,11 @@ function updateCart() {
 
 function submitOrderToFireBase() {
   const name = document.getElementById('customerName').value;
+  const email = document.getElementById("customerEmail").value;
+  const phone = document.getElementById("customerPhone").value;
+  const store = document.getElementById("customerStore").value;
+  const address = document.getElementById("customerAddress").value;
+
 
   const items = Object.keys(cart).map(barcode => ({
     barcode,
@@ -284,6 +320,10 @@ function submitOrderToFireBase() {
 
   db.collection("orders").add({
     customer: name,
+    email:email,
+    phone:phone,
+    store:store,
+    address:address,
     status: "PENDING",
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     items
@@ -312,6 +352,3 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
-
-
-
