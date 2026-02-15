@@ -2,14 +2,23 @@ const API = 'https://script.google.com/macros/s/AKfycbw26kbDxoMvthDo3_ZEkdevlcYn
 let cart = {};
 let inventory = {};
 
+// const firebaseConfig = {
+//     apiKey: "AIzaSyB3wWzFFTJtgihdHtwrBc3QGUlC0ylDygg",
+//     authDomain: "kaftor-il.firebaseapp.com",
+//     projectId: "kaftor-il",
+//     storageBucket: "kaftor-il.firebasestorage.app",
+//     messagingSenderId: "509331651280",
+//     appId: "1:509331651280:web:02c76afc0dc27c059f3cd5"
+//   };
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyB3wWzFFTJtgihdHtwrBc3QGUlC0ylDygg",
-    authDomain: "kaftor-il.firebaseapp.com",
-    projectId: "kaftor-il",
-    storageBucket: "kaftor-il.firebasestorage.app",
-    messagingSenderId: "509331651280",
-    appId: "1:509331651280:web:02c76afc0dc27c059f3cd5"
-  };
+  apiKey: "AIzaSyDQVEpmUGZ-ipTY0D9yzxxW4hoOjPUl1JQ",
+  authDomain: "kaftor-usa.firebaseapp.com",
+  projectId: "kaftor-usa",
+  storageBucket: "kaftor-usa.firebasestorage.app",
+  messagingSenderId: "870840382352",
+  appId: "1:870840382352:web:bec543c4c1e36d4f143915"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -313,7 +322,8 @@ function submitOrderToFireBase() {
 
   const items = Object.keys(cart).map(barcode => ({
     barcode,
-    qty: cart[barcode].qty
+    qty: cart[barcode].qty,
+    price: cart[barcode].price
   }));
 
   showLoading("Sending order…");
