@@ -103,48 +103,104 @@ function renderProducts(data) {
     first = false;
   });
 }
+function handleImageError(img) {
+  let url = img.src;
 
+  // STEP 1: If original fails, try adding " front"
+  if (!url.includes('%20front') && !url.includes('%20copy')) {
+    console.log("Original failed, trying ' front'...");
+    img.src = url.replace('.jpg', '%20front.jpg');
+  } 
+  // STEP 2: If " front" fails, try adding " copy" to it
+  else if (url.includes('%20front') && !url.includes('%20copy')) {
+    console.log("' front' failed, trying ' front copy'...");
+    img.src = url.replace('%20front.jpg', '%20front%20copy.jpg');
+  } 
+  // STEP 3: If that fails too, try just " copy" (in case 'front' wasn't there)
+  else if (!url.includes('%20front') && url.includes('%20copy')) {
+      // already tried copy, nothing left to try
+      img.onerror = null;
+      img.src = '/images/kaftor_logo.png';
+  }
+  // FINAL STEP: Give up and show logo
+  else {
+    console.log("All variants failed. Showing placeholder.");
+    img.onerror = null; // Important! Stops the loop
+    img.src = '/images/kaftor_logo.png';
+  }
+}
 function productCard(p) {
+  // Use a placeholder if image is missing to prevent 404s
+  const imgSrc = p.image && p.image.trim() !== "" ? p.image : '/images/kaftor_logo.png';
 
   return `
   <div class="bg-white rounded shadow p-3 flex flex-col">
     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
-  <img
-    src="${p.image}"
-    onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
-    class="w-full h-full object-cover"
-     onclick="openImage(this.src)"
-  class="cursor-zoom-in"
-  >
-</div>
+      <img
+        src="${imgSrc}"
+        referrerpolicy="no-referrer"
+        loading="lazy"
+        onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
+        class="w-full h-full object-cover cursor-zoom-in"
+        onclick="openImage(this.src)"
+      >
+    </div>
 
     <h4 class="font-semibold">${p.name}</h4>
     <small class="text-gray-500">${p.catalog}</small>
-    <small class="text-sm mt-1">
-     מחיר: <span>${p.price}</span>
-     </small>
-    <small class="text-sm mt-1">
-      מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
-    </small>
+    <small class="text-sm mt-1">מחיר: <span>${p.price}</span></small>
+    <small class="text-sm mt-1">מלאי: <span id="stock-${p.barcode}">${p.stock}</span></small>
 
     <div class="flex items-center justify-between mt-3">
-      <button
-        onclick="changeQty('${p.barcode}', -1)"
-        class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
-        −
-      </button>
-
+      <button onclick="changeQty('${p.barcode}', -1)" class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">−</button>
       <span id="qty-${p.barcode}" class="font-semibold">0</span>
-
-      <button
-        id="plus-${p.barcode}"
-        onclick="changeQty('${p.barcode}', 1)"
-        class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">
-        +
-      </button>
+      <button id="plus-${p.barcode}" onclick="changeQty('${p.barcode}', 1)" class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">+</button>
     </div>
   </div>`;
 }
+
+// function productCard(p) {
+
+//   return `
+//   <div class="bg-white rounded shadow p-3 flex flex-col">
+//     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
+//   <img
+//     src="${p.image}"
+//     referrerpolicy="no-referrer"
+//     onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
+//     class="w-full h-full object-cover"
+//      onclick="openImage(this.src)"
+//   class="cursor-zoom-in"
+//   >
+// </div>
+
+//     <h4 class="font-semibold">${p.name}</h4>
+//     <small class="text-gray-500">${p.catalog}</small>
+//     <small class="text-sm mt-1">
+//      מחיר: <span>${p.price}</span>
+//      </small>
+//     <small class="text-sm mt-1">
+//       מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
+//     </small>
+
+//     <div class="flex items-center justify-between mt-3">
+//       <button
+//         onclick="changeQty('${p.barcode}', -1)"
+//         class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
+//         −
+//       </button>
+
+//       <span id="qty-${p.barcode}" class="font-semibold">0</span>
+
+//       <button
+//         id="plus-${p.barcode}"
+//         onclick="changeQty('${p.barcode}', 1)"
+//         class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">
+//         +
+//       </button>
+//     </div>
+//   </div>`;
+// }
 
 function openImage(src) {
   const modal = document.createElement("div");
