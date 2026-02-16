@@ -130,33 +130,47 @@ function handleImageError(img) {
   }
 }
 function productCard(p) {
-  // Use a placeholder if image is missing to prevent 404s
-  const imgSrc = p.image && p.image.trim() !== "" ? p.image : '/images/kaftor_logo.png';
+  // We assume p.catalog is the base name (e.g., "K01PS")
+  // We start by trying the most basic version in your GitHub images folder
+  const initialSrc = `images/${p.catalog}.jpg`;
 
   return `
   <div class="bg-white rounded shadow p-3 flex flex-col">
     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
       <img
-        src="${imgSrc}"
-        referrerpolicy="no-referrer"
+        src="${initialSrc}"
         loading="lazy"
-        onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
+        onerror="handleLocalFallback(this, '${p.catalog}')"
         class="w-full h-full object-cover cursor-zoom-in"
         onclick="openImage(this.src)"
       >
     </div>
-
     <h4 class="font-semibold">${p.name}</h4>
     <small class="text-gray-500">${p.catalog}</small>
-    <small class="text-sm mt-1">מחיר: <span>${p.price}</span></small>
-    <small class="text-sm mt-1">מלאי: <span id="stock-${p.barcode}">${p.stock}</span></small>
-
-    <div class="flex items-center justify-between mt-3">
-      <button onclick="changeQty('${p.barcode}', -1)" class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">−</button>
-      <span id="qty-${p.barcode}" class="font-semibold">0</span>
-      <button id="plus-${p.barcode}" onclick="changeQty('${p.barcode}', 1)" class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">+</button>
-    </div>
+    ...
   </div>`;
+}
+
+function handleLocalFallback(img, catalog) {
+  const currentSrc = img.src;
+
+  // Step 1: If basic failed, try _front
+  if (!currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
+    img.src = `images/${catalog}_front.jpg`;
+  } 
+  // Step 2: If _front failed, try _front_copy
+  else if (currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
+    img.src = `images/${catalog}_front_copy.jpg`;
+  } 
+  // Step 3: If those failed, try just _copy (optional)
+  else if (!currentSrc.includes('_front') && currentSrc.includes('_copy')) {
+     img.src = `images/${catalog}_copy.jpg`;
+  }
+  // Final Step: Show the logo if nothing is found
+  else {
+    img.onerror = null;
+    img.src = 'images/kaftor_logo.png'; 
+  }
 }
 
 // function productCard(p) {
@@ -418,3 +432,4 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
