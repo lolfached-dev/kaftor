@@ -147,7 +147,29 @@ function productCard(p) {
     </div>
     <h4 class="font-semibold">${p.name}</h4>
     <small class="text-gray-500">${p.catalog}</small>
-    ...
+    <small class="text-sm mt-1">
+     מחיר: <span>${p.price}</span>
+     </small>
+    <small class="text-sm mt-1">
+      מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
+    </small>
+
+    <div class="flex items-center justify-between mt-3">
+      <button
+        onclick="changeQty('${p.barcode}', -1)"
+        class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
+        −
+      </button>
+
+      <span id="qty-${p.barcode}" class="font-semibold">0</span>
+
+      <button
+        id="plus-${p.barcode}"
+        onclick="changeQty('${p.barcode}', 1)"
+        class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">
+        +
+      </button>
+    </div>
   </div>`;
 }
 
@@ -432,4 +454,5 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
 
