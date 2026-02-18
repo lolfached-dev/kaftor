@@ -435,6 +435,7 @@ function submitOrderToFireBase() {
     localStorage.removeItem('cart');
     hideLoading();
     alert("Order sent successfully!");
+    location.reload()
   })
   .catch(err => {
     hideLoading();
@@ -454,6 +455,7 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
 
 
 
