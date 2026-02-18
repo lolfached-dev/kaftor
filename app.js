@@ -160,8 +160,17 @@ function productCard(p) {
         class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
         −
       </button>
+      <input 
+        type="number"
+        placeholder="0"
+        id="qty-${p.barcode}"
+        onchange="changeQty('${p.barcode}', this.value ,true)"
+        class="w-16 text-center border border-gray-300 rounded-md 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 
+              focus:border-blue-500 transition"
+      >
 
-      <span id="qty-${p.barcode}" class="font-semibold">0</span>
+      
 
       <button
         id="plus-${p.barcode}"
@@ -249,7 +258,8 @@ function openImage(src) {
 }
 
 
-function changeQty(barcode, delta) {
+function changeQty(barcode, delta,bool) {
+  delta = parseInt(delta)
   const product = inventory[barcode];
   if (!cart[barcode]) cart[barcode] = { name: product.name, qty: 0 ,price:product.price};
 
@@ -258,13 +268,13 @@ function changeQty(barcode, delta) {
 
   cart[barcode].qty += delta;
   product.stock -= delta;
-
+  if(bool){cart[barcode].qty = delta}
   if (cart[barcode].qty === 0) delete cart[barcode];
 
-  document.getElementById(`qty-${barcode}`).innerText =
+  document.getElementById(`qty-${barcode}`).value =
     cart[barcode]?.qty || 0;
 
-  document.getElementById(`stock-${barcode}`).innerText = product.stock;
+  // document.getElementById(`stock-${barcode}`).innerText = product.stock;
 
   const plusBtn = document.getElementById(`plus-${barcode}`);
   plusBtn.disabled = product.stock === 0;
