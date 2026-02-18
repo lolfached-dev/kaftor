@@ -335,16 +335,34 @@ function updateCart() {
         </div>
 
          <span class="font-semibold">
-           ${Number(String(cart[barcode].price).replace("₪ ", "")) * cart[barcode].qty} ₪
-        </span>
+            ${
+              (Number(
+                String(cart[barcode].price ?? 0)
+                  .replace("₪", "")
+                  .trim()
+              ) || 0) * (cart[barcode].qty || 0)
+            } ₪
+          </span>
+
         <button onclick="changeQty('${barcode}', ${-cart[barcode].qty})"
           class="text-red-600 font-bold">🗑</button>
       </div>
     
     `
   ).join('');
-  total = Object.values(cart)
-  .reduce((sum, item) => sum + Number(String(item.price.replace("₪ ", ""))) * item.qty, 0);
+    total = Object.values(cart).reduce((sum, item) => {
+    let price = item.price;
+
+    // If it's a string like "₪ 25"
+    if (typeof price === "string") {
+      price = price.replace("₪", "").trim();
+    }
+
+    price = Number(price) || 0;
+
+    return sum + price * item.qty;
+  }, 0);
+
 
   document.getElementById('cartTotal').innerHTML = `<span class="font-semibold">
            ${total.toFixed(2)} ₪
@@ -455,7 +473,6 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
-
 
 
 
