@@ -335,7 +335,7 @@ function updateCart() {
         </div>
 
          <span class="font-semibold">
-           ${cart[barcode].price.replace("₪ ", "") * cart[barcode].qty} ₪
+           ${Number(String(cart[barcode].price).replace("₪ ", "")) * cart[barcode].qty} ₪
         </span>
         <button onclick="changeQty('${barcode}', ${-cart[barcode].qty})"
           class="text-red-600 font-bold">🗑</button>
@@ -344,7 +344,7 @@ function updateCart() {
     `
   ).join('');
   total = Object.values(cart)
-  .reduce((sum, item) => sum + item.price.replace("₪ ", "") * item.qty, 0);
+  .reduce((sum, item) => sum + Number(String(item.price.replace("₪ ", ""))) * item.qty, 0);
 
   document.getElementById('cartTotal').innerHTML = `<span class="font-semibold">
            ${total.toFixed(2)} ₪
@@ -454,5 +454,6 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
 
 
