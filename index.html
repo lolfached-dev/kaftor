@@ -18,7 +18,19 @@
     עגלה (<span id="cartCount">0</span>)
   </button>
 </header>
-
+<style>
+  #cartItems::-webkit-scrollbar {
+  width: 6px;
+}
+#cartItems::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* Light gray */
+  border-radius: 10px;
+}
+#cartItems {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+</style>
 <!-- Category Tabs -->
 <div id="categoryTabs" class="flex gap-2 p-4 overflow-x-auto"></div>
 
@@ -45,7 +57,7 @@
     <label for="" id="cartTotal">סה"כ להזמנה</label>
     <form onsubmit="submitOrderToFireBase(); return false;" autocomplete="on">
 
-      <!-- Name (Required) -->
+   <div class="grid grid-cols-2 w-full gap-4"> <!-- Name (Required) -->
     <input
       id="customerName"
       name="name"
@@ -82,15 +94,22 @@
       placeholder="כתובת"
       autocomplete="text"
       class="border w-full p-2 rounded mb-3">
-
+    </div>  
     <!-- Store (Optional) -->
     <input
       id="customerStore"
       name="organization"
       type="text"
-      placeholder="חנות"
+      placeholder="הערות"
       autocomplete="organization"
       class="border w-full p-2 rounded mb-4">
+      
+      <div class="flex items-center gap-2 py-2 border-t mt-2">
+        <input type="checkbox" id="isReturnOrder" class="w-4 h-4 cursor-pointer">
+        <label for="isReturnOrder" class="text-sm font-medium text-gray-700 select-none">
+           החזרת סחורה 
+        </label>
+      </div>
 
       <button type="submit"
         class="bg-green-600 text-white w-full py-2 rounded">
