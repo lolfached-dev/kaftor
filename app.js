@@ -320,64 +320,59 @@ function addToCart(barcode, name) {
 }
 
 function updateCart() {
-  console.log(cart)
+  console.log(cart);
   document.getElementById('cartCount').innerText =
-    Object.values(cart).reduce((a,b)=>a+b.qty,0);
+    Object.values(cart).reduce((a, b) => a + b.qty, 0);
+
   let total = 0;
   const div = document.getElementById('cartItems');
-  div.innerHTML = Object.keys(cart).map(barcode =>
-    
-    `<div class="flex justify-between items-center mb-2">
-        <span class="font-semibold">${cart[barcode].name}</span>
-        
+
+  // Use map to build the rows with a separator line
+  div.innerHTML = Object.keys(cart).map(barcode => {
+    const item = cart[barcode];
+    const unitPrice = Number(String(item.price ?? 0).replace("₪", "").trim()) || 0;
+    const lineTotal = unitPrice * (item.qty || 0);
+
+    return `
+    <div class="border-b border-gray-100 py-3 last:border-0">
+      <div class="flex justify-between items-center mb-1">
+        <span class="font-medium text-gray-800">${item.name}</span>
+        <button onclick="changeQty('${barcode}', ${-item.qty})"
+          class="text-gray-400 hover:text-red-600 transition-colors text-sm">
+          ביטול 🗑
+        </button>
       </div>
 
-    <div class="flex items-center justify-between">
-
-        <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
           <button onclick="changeQty('${barcode}', -1)"
-            class="bg-gray-300 px-2 rounded">−</button>
+            class="bg-white shadow-sm w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100">−</button>
 
-          <span>${cart[barcode].qty}</span>
+          <span class="font-bold w-4 text-center">${item.qty}</span>
 
           <button onclick="changeQty('${barcode}', 1)"
-            class="bg-gray-300 px-2 rounded">+</button>
+            class="bg-white shadow-sm w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100">+</button>
         </div>
 
-         <span class="font-semibold">
-            ${
-              (Number(
-                String(cart[barcode].price ?? 0)
-                  .replace("₪", "")
-                  .trim()
-              ) || 0) * (cart[barcode].qty || 0)
-            } ₪
-          </span>
-
-        <button onclick="changeQty('${barcode}', ${-cart[barcode].qty})"
-          class="text-red-600 font-bold">🗑</button>
+        <span class="font-bold text-blue-700">
+          ${lineTotal.toFixed(2)} ₪
+        </span>
       </div>
-    
-    `
-  ).join('');
-    total = Object.values(cart).reduce((sum, item) => {
+    </div>`;
+  }).join('');
+
+  // Calculate Total
+  total = Object.values(cart).reduce((sum, item) => {
     let price = item.price;
-
-    // If it's a string like "₪ 25"
-    if (typeof price === "string") {
-      price = price.replace("₪", "").trim();
-    }
-
-    price = Number(price) || 0;
-
-    return sum + price * item.qty;
+    if (typeof price === "string") price = price.replace("₪", "").trim();
+    return sum + (Number(price) || 0) * item.qty;
   }, 0);
 
-
-  document.getElementById('cartTotal').innerHTML = `<span class="font-semibold">
-           ${total.toFixed(2)} ₪
-        </span>`
-
+  document.getElementById('cartTotal').innerHTML = `
+    <div class="flex justify-between items-center w-full pt-4">
+       <span>סה"כ לתשלום:</span>
+       <span class="text-xl font-bold">${total.toFixed(2)} ₪</span>
+    </div>`;
 }
 // function submitOrder() {
 //   const name = document.getElementById('customerName').value.trim();
@@ -438,7 +433,7 @@ function submitOrderToFireBase() {
   const phone = document.getElementById("customerPhone").value;
   const store = document.getElementById("customerStore").value;
   const address = document.getElementById("customerAddress").value;
-
+  const isReturn = document.getElementById("isReturnOrder").checked
 
   const items = Object.keys(cart).map(barcode => ({
     barcode,
@@ -456,6 +451,7 @@ function submitOrderToFireBase() {
     address:address,
     status: "PENDING",
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    isReturn:isReturn,
     items
   })
   .then(() => {
@@ -483,6 +479,5 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
-
 
 
