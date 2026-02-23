@@ -105,9 +105,12 @@ function renderProducts(data) {
 }
 function handleImageError(img) {
   let url = img.src;
+  if(url !== url.toUpperCase()){
+    img.src = url.toUpperCase();
+  }
 
   // STEP 1: If original fails, try adding " front"
-  if (!url.includes('%20front') && !url.includes('%20copy')) {
+ else if (!url.includes('%20front') && !url.includes('%20copy')) {
     console.log("Original failed, trying ' front'...");
     img.src = url.replace('.jpg', '%20front.jpg');
   } 
@@ -479,5 +482,6 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
 
 
