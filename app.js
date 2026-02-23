@@ -187,9 +187,11 @@ function productCard(p) {
 
 function handleLocalFallback(img, catalog) {
   const currentSrc = img.src;
-
+  if(currentSrc !== currentSrc.toUpperCase()){
+    img.src = currentSrc.toUpperCase();
+  }
   // Step 1: If basic failed, try _front
-  if (!currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
+ else if (!currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
     img.src = `images/${catalog}_front.jpg`;
   } 
   // Step 2: If _front failed, try _front_copy
@@ -482,6 +484,7 @@ function showLoading(message = "Friendly hold on 🙂<br>We’re loading things 
 function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
+
 
 
 
