@@ -22,6 +22,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+function stripIlsSymbol(price) {
+  return String(price ?? "").replace(/₪|ILS/gi, "").trim();
+}
+
+function formatIlsPrice(price) {
+  const cleanPrice = stripIlsSymbol(price);
+  return cleanPrice ? `${cleanPrice} ₪` : "";
+}
+
+function numericPrice(price) {
+  return Number(stripIlsSymbol(price)) || 0;
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -151,7 +164,7 @@ function productCard(p) {
     <h4 class="font-semibold">${p.name}</h4>
     <small class="text-gray-500">${p.catalog}</small>
     <small class="text-sm mt-1">
-     מחיר: <span>${p.price}</span>
+     מחיר: <span>${formatIlsPrice(p.price)}</span>
      </small>
     <small class="text-sm mt-1">
       מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
@@ -332,7 +345,7 @@ function updateCart() {
   // Use map to build the rows with a separator line
   div.innerHTML = Object.keys(cart).map(barcode => {
     const item = cart[barcode];
-    const unitPrice = Number(String(item.price ?? 0).replace("₪", "").trim()) || 0;
+    const unitPrice = numericPrice(item.price);
     const lineTotal = unitPrice * (item.qty || 0);
 
     return `
@@ -366,8 +379,7 @@ function updateCart() {
   // Calculate Total
   total = Object.values(cart).reduce((sum, item) => {
     let price = item.price;
-    if (typeof price === "string") price = price.replace("₪", "").trim();
-    return sum + (Number(price) || 0) * item.qty;
+    return sum + numericPrice(price) * item.qty;
   }, 0);
 
   document.getElementById('cartTotal').innerHTML = `
@@ -440,7 +452,7 @@ function submitOrderToFireBase() {
   const items = Object.keys(cart).map(barcode => ({
     barcode,
     qty: cart[barcode].qty,
-    price: cart[barcode].price
+    price: stripIlsSymbol(cart[barcode].price)
   }));
 
   showLoading("Sending order…");
