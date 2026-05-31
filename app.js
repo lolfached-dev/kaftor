@@ -1,502 +1,143 @@
-const API = 'https://script.google.com/macros/s/AKfycbw26kbDxoMvthDo3_ZEkdevlcYn81adUHuhdj7hvCWgouLPobWnoISm_Kr_z-iCwYDM/exec';
-let cart = {};
-let inventory = {};
-
-// const firebaseConfig = {
-//     apiKey: "AIzaSyB3wWzFFTJtgihdHtwrBc3QGUlC0ylDygg",
-//     authDomain: "kaftor-il.firebaseapp.com",
-//     projectId: "kaftor-il",
-//     storageBucket: "kaftor-il.firebasestorage.app",
-//     messagingSenderId: "509331651280",
-//     appId: "1:509331651280:web:02c76afc0dc27c059f3cd5"
-//   };
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDQVEpmUGZ-ipTY0D9yzxxW4hoOjPUl1JQ",
-  authDomain: "kaftor-usa.firebaseapp.com",
-  projectId: "kaftor-usa",
-  storageBucket: "kaftor-usa.firebasestorage.app",
-  messagingSenderId: "870840382352",
-  appId: "1:870840382352:web:bec543c4c1e36d4f143915"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-function stripIlsSymbol(price) {
-  return String(price ?? "").replace(/₪|ILS/gi, "").trim();
-}
-
-function formatIlsPrice(price) {
-  const cleanPrice = stripIlsSymbol(price);
-  return cleanPrice ? `${cleanPrice} ₪` : "";
-}
-
-function numericPrice(price) {
-  return Number(stripIlsSymbol(price)) || 0;
-}
-
-
-document.addEventListener('DOMContentLoaded', () => {
-
-  showLoading("Loading products…");
-
-  fetch(API + '?action=inventory')
-    .then(res => res.json())
-    .then(data => {
-      renderProducts(data);
-      hideLoading();
-    });
-
-});
-
-  function renderProducts(data) {
-  const cats = {};
-
-  data.forEach(p => {
-    if (!cats[p.category]) cats[p.category] = [];
-    cats[p.category].push(p);
-  });
+<!DOCTYPE html>
+<html dir="rtl">
   
+<head>
+  <meta name="referrer" content="no-referrer">
+  <title> מוצרי כפתור</title>
+  <!-- <link rel="stylesheet" href="style.css"> -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  const container = document.getElementById('categories');
-  container.innerHTML = '';
+</head>
+<body class="bg-gray-100 min-h-screen">
 
-  Object.keys(cats).forEach(cat => {
-    const div = document.createElement('div');
-    div.className = 'category';
-    div.innerHTML = `<h2>${cat}</h2>
-      <div class="products">
-        ${cats[cat].map(p => productCard(p)).join('')}
-      </div>;`
-    container.appendChild(div);
-  });
+<header class="bg-white shadow p-4 flex justify-between items-center">
+  <h1 class="text-2xl font-bold">מוצרים</h1>
+  <button id="cartBtn" class="bg-blue-600 text-white px-4 py-2 rounded">
+    עגלה (<span id="cartCount">0</span>)
+  </button>
+</header>
+<style>
+  #cartItems::-webkit-scrollbar {
+  width: 6px;
 }
-function renderProducts(data) {
-  const cats = {};
-  data.forEach(p => {
-    inventory[p.barcode] = { ...p };
-  });
-
-  data.forEach(p => {
-    if (!cats[p.category]) cats[p.category] = [];
-    cats[p.category].push(p);
-  });
-
-  const tabs = document.getElementById('categoryTabs');
-  const container = document.getElementById('categories');
-
-  tabs.innerHTML = '';
-  container.innerHTML = '';
-
-  let first = true;
-
-  Object.keys(cats).forEach(cat => {
-    // TAB BUTTON
-    const btn = document.createElement('button');
-    btn.className =
-      'px-4 py-2 rounded bg-gray-200 hover:bg-blue-600 hover:text-white transition';
-    btn.innerText = cat;
-
-    btn.onclick = () => showCategory(cat);
-
-    tabs.appendChild(btn);
-
-    // CATEGORY CONTENT
-    const div = document.createElement('div');
-    div.id = `cat-${cat}`;
-    div.className = first ? '' : 'hidden';
-    div.innerHTML = `
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        ${cats[cat].map(p => productCard(p)).join('')}
-      </div>
-    `;
-
-    container.appendChild(div);
-
-    first = false;
-  });
+#cartItems::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* Light gray */
+  border-radius: 10px;
 }
-function handleImageError(img) {
-  let url = img.src;
-  if(url !== url.toUpperCase()){
-    img.src = url.toUpperCase();
-  }
-
-  // STEP 1: If original fails, try adding " front"
- else if (!url.includes('%20front') && !url.includes('%20copy')) {
-    console.log("Original failed, trying ' front'...");
-    img.src = url.replace('.jpg', '%20front.jpg');
-  } 
-  // STEP 2: If " front" fails, try adding " copy" to it
-  else if (url.includes('%20front') && !url.includes('%20copy')) {
-    console.log("' front' failed, trying ' front copy'...");
-    img.src = url.replace('%20front.jpg', '%20front%20copy.jpg');
-  } 
-  // STEP 3: If that fails too, try just " copy" (in case 'front' wasn't there)
-  else if (!url.includes('%20front') && url.includes('%20copy')) {
-      // already tried copy, nothing left to try
-      img.onerror = null;
-      img.src = '/images/kaftor_logo.png';
-  }
-  // FINAL STEP: Give up and show logo
-  else {
-    console.log("All variants failed. Showing placeholder.");
-    img.onerror = null; // Important! Stops the loop
-    img.src = '/images/kaftor_logo.png';
-  }
+#cartItems {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
 }
-function productCard(p) {
-  // We assume p.catalog is the base name (e.g., "K01PS")
-  // We start by trying the most basic version in your GitHub images folder
-  const initialSrc = `images/${p.catalog}.jpg`;
+</style>
+<!-- Category Tabs -->
+<div id="categoryTabs" class="flex gap-2 p-4 overflow-x-auto"></div>
 
-  return `
-  <div class="bg-white rounded shadow p-3 flex flex-col">
-    <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
-      <img
-        src="${initialSrc}"
-        loading="lazy"
-        onerror="handleLocalFallback(this, '${p.catalog}')"
-        class="w-full h-full object-cover cursor-zoom-in"
-        onclick="openImage(this.src)"
-      >
-    </div>
-    <h4 class="font-semibold">${p.name}</h4>
-    <small class="text-gray-500">${p.catalog}</small>
-    <small class="text-sm mt-1">
-     מחיר: <span>${formatIlsPrice(p.price)}</span>
-     </small>
-    <small class="text-sm mt-1">
-      מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
-    </small>
+<!-- Products -->
+<div id="categories" class="p-4"></div>
+<div id="cartModal"
+  class="fixed top-0 right-0 w-80 h-full bg-white shadow-lg
+         translate-x-full transition-transform duration-300 z-50
+         flex flex-col">
 
-    <div class="flex items-center justify-between mt-3">
-      <button
-        onclick="changeQty('${p.barcode}', -1)"
-        class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
-        −
-      </button>
-      <input 
-        type="number"
-        placeholder="0"
-        id="qty-${p.barcode}"
-        onchange="changeQty('${p.barcode}', this.value ,true)"
-        class="w-16 text-center border border-gray-300 rounded-md 
-              focus:outline-none focus:ring-2 focus:ring-blue-500 
-              focus:border-blue-500 transition"
-      >
+  <!-- Header -->
+  <div class="p-4 flex justify-between items-center border-b">
+    <h2 class="text-lg font-bold">עגלה</h2>
+    <button onclick="toggleCart()">✕</button>
+  </div>
 
+  <!-- Scrollable Items -->
+  <div id="cartItems"
+       class="flex-1 overflow-y-auto p-4 space-y-3">
+  </div>
+
+  <!-- Static Bottom Section -->
+  <div class="p-4 border-t bg-white">
+    <label for="" id="cartTotal">סה"כ להזמנה</label>
+    <form onsubmit="submitOrderToFireBase(); return false;" autocomplete="on">
+
+   <div class="grid grid-cols-2 w-full gap-4"> <!-- Name (Required) -->
+    <input
+      id="customerName"
+      name="name"
+      type="text"
+      placeholder="שם"
+      required
+      autocomplete="name"
+      class="border w-full p-2 rounded mb-3">
+
+    <!-- Email (Required) -->
+    <input
+      id="customerEmail"
+      name="email"
+      type="email"
+      placeholder="מייל"
+      required
+      autocomplete="email"
+      class="border w-full p-2 rounded mb-3">
+
+    <!-- Phone (Optional) -->
+    <input
+      id="customerPhone"
+      name="phone"
+      type="tel"
+      placeholder="מספר טלפון"
+      autocomplete="tel"
+      class="border w-full p-2 rounded mb-3">
+
+      <!-- Phone (Optional) -->
+    <input
+      id="customerAddress"
+      name="address"
+      type="text"
+      placeholder="כתובת"
+      autocomplete="text"
+      class="border w-full p-2 rounded mb-3">
+    </div>  
+    <!-- Store (Optional) -->
+    <input
+      id="customerStore"
+      name="organization"
+      type="text"
+      placeholder="הערות"
+      autocomplete="organization"
+      class="border w-full p-2 rounded mb-4">
       
+      <div class="flex items-center gap-2 py-2 border-t mt-2">
+        <input type="checkbox" id="isReturnOrder" class="w-4 h-4 cursor-pointer">
+        <label for="isReturnOrder" class="text-sm font-medium text-gray-700 select-none">
+           החזרת סחורה 
+        </label>
+      </div>
 
-      <button
-        id="plus-${p.barcode}"
-        onclick="changeQty('${p.barcode}', 1)"
-        class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">
-        +
+      <button type="submit"
+        class="bg-green-600 text-white w-full py-2 rounded">
+        שלח הזמנה
       </button>
-    </div>
-  </div>`;
-}
 
-function handleLocalFallback(img, catalog) {
-  const currentSrc = img.src;
-  // Step 1: If basic failed, try _front
-  if (!currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
-    img.src = `images/${catalog}_front.jpg`;
-  } 
-  // Step 2: If _front failed, try _front_copy
-  else if (currentSrc.includes('_front') && !currentSrc.includes('_copy')) {
-    img.src = `images/${catalog}_front_copy.jpg`;
-  } 
-  // Step 3: If those failed, try just _copy (optional)
-  else if (!currentSrc.includes('_front') && currentSrc.includes('_copy')) {
-     img.src = `images/${catalog}_copy.jpg`;
-  }
-  // Final Step: Show the logo if nothing is found
-  else {
-    img.onerror = null;
-    img.src = 'images/kaftor_logo.png'; 
-  }
-}
+    </form>
 
-// function productCard(p) {
-
-//   return `
-//   <div class="bg-white rounded shadow p-3 flex flex-col">
-//     <div class="h-40 w-full flex items-center justify-center bg-gray-50 rounded mb-2 overflow-hidden">
-//   <img
-//     src="${p.image}"
-//     referrerpolicy="no-referrer"
-//     onerror="this.onerror=null; this.src='/images/kaftor_logo.png';"
-//     class="w-full h-full object-cover"
-//      onclick="openImage(this.src)"
-//   class="cursor-zoom-in"
-//   >
-// </div>
-
-//     <h4 class="font-semibold">${p.name}</h4>
-//     <small class="text-gray-500">${p.catalog}</small>
-//     <small class="text-sm mt-1">
-//      מחיר: <span>${p.price}</span>
-//      </small>
-//     <small class="text-sm mt-1">
-//       מלאי: <span id="stock-${p.barcode}">${p.stock}</span>
-//     </small>
-
-//     <div class="flex items-center justify-between mt-3">
-//       <button
-//         onclick="changeQty('${p.barcode}', -1)"
-//         class="px-3 py-1 bg-gray-200 rounded text-lg hover:bg-gray-300">
-//         −
-//       </button>
-
-//       <span id="qty-${p.barcode}" class="font-semibold">0</span>
-
-//       <button
-//         id="plus-${p.barcode}"
-//         onclick="changeQty('${p.barcode}', 1)"
-//         class="px-3 py-1 bg-blue-600 text-white rounded text-lg hover:bg-blue-700">
-//         +
-//       </button>
-//     </div>
-//   </div>`;
-// }
-
-function openImage(src) {
-  const modal = document.createElement("div");
-  modal.className = "fixed inset-0 bg-black/70 flex items-center justify-center z-50";
-  modal.innerHTML = `
-    <img src="${src}" class="max-h-[90%] max-w-[90%] rounded">
-  `;
-  modal.onclick = () => modal.remove();
-  document.body.appendChild(modal);
-}
-
-
-function changeQty(barcode, delta,bool) {
-  delta = parseInt(delta)
-  const product = inventory[barcode];
-  if (!cart[barcode]) cart[barcode] = { name: product.name, qty: 0 ,price:product.price};
-
-  if (delta === 1 && product.stock === 0) return;
-  if (delta === -1 && cart[barcode].qty === 0) return;
-
-  cart[barcode].qty += delta;
-  product.stock -= delta;
-  if(bool){cart[barcode].qty = delta}
-  if (cart[barcode].qty === 0) delete cart[barcode];
-
-  document.getElementById(`qty-${barcode}`).value =
-    cart[barcode]?.qty || 0;
-
-  // document.getElementById(`stock-${barcode}`).innerText = product.stock;
-
-  const plusBtn = document.getElementById(`plus-${barcode}`);
-  plusBtn.disabled = product.stock === 0;
-  plusBtn.classList.toggle('opacity-50', product.stock === 0);
-
-  updateCart();
-}
-function toggleCart() {
-  const cart = document.getElementById('cartModal');
-  cart.classList.toggle('translate-x-full');
-}
-
-document.getElementById('cartBtn').onclick = toggleCart;
-
-
-function showCategory(cat) {
-  // hide categories
-  document.querySelectorAll('[id^="cat-"]').forEach(div => {
-    div.classList.add('hidden');
-  });
-
-  document.getElementById(`cat-${cat}`).classList.remove('hidden');
-
-  // active tab style
-  document.querySelectorAll('#categoryTabs button').forEach(btn => {
-    btn.classList.remove('bg-blue-600', 'text-white');
-    btn.classList.add('bg-gray-200');
-  });
-
-  const activeBtn = [...document.querySelectorAll('#categoryTabs button')]
-    .find(b => b.innerText === cat);
-
-  activeBtn.classList.remove('bg-gray-200');
-  activeBtn.classList.add('bg-blue-600', 'text-white');
-}
+  </div>
+</div>
 
 
 
-function addToCart(barcode, name) {
-  if (!cart[barcode]) cart[barcode] = { name, qty: 0 };
-  cart[barcode].qty++;
-  updateCart();
-}
+<script src="app.js"></script>
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+  class="fixed inset-0 bg-black/50 flex flex-col items-center justify-center
+         text-white text-center hidden z-50 transition-opacity">
 
-function updateCart() {
-  console.log(cart);
-  document.getElementById('cartCount').innerText =
-    Object.values(cart).reduce((a, b) => a + b.qty, 0);
+  <div
+    class="w-14 h-14 border-4 border-white border-t-transparent
+           rounded-full animate-spin mb-4">
+  </div>
 
-  let total = 0;
-  const div = document.getElementById('cartItems');
+  <p class="text-lg font-semibold">טוען נתונים...</p>
 
-  // Use map to build the rows with a separator line
-  div.innerHTML = Object.keys(cart).map(barcode => {
-    const item = cart[barcode];
-    const unitPrice = numericPrice(item.price);
-    const lineTotal = unitPrice * (item.qty || 0);
+</div>
 
-    return `
-    <div class="border-b border-gray-100 py-3 last:border-0">
-      <div class="flex justify-between items-center mb-1">
-        <span class="font-medium text-gray-800">${item.name}</span>
-        <button onclick="changeQty('${barcode}', ${-item.qty})"
-          class="text-gray-400 hover:text-red-600 transition-colors text-sm">
-          ביטול 🗑
-        </button>
-      </div>
+</body>
 
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
-          <button onclick="changeQty('${barcode}', -1)"
-            class="bg-white shadow-sm w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100">−</button>
-
-          <span class="font-bold w-4 text-center">${item.qty}</span>
-
-          <button onclick="changeQty('${barcode}', 1)"
-            class="bg-white shadow-sm w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100">+</button>
-        </div>
-
-        <span class="font-bold text-blue-700">
-          ${lineTotal.toFixed(2)} ₪
-        </span>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Calculate Total
-  total = Object.values(cart).reduce((sum, item) => {
-    let price = item.price;
-    return sum + numericPrice(price) * item.qty;
-  }, 0);
-
-  document.getElementById('cartTotal').innerHTML = `
-    <div class="flex justify-between items-center w-full pt-4">
-       <span>סה"כ לתשלום:</span>
-       <span class="text-xl font-bold">${total.toFixed(2)} ₪</span>
-    </div>`;
-}
-// function submitOrder() {
-//   const name = document.getElementById('customerName').value.trim();
-
-//   if (!name) {
-//     alert("Please enter your name");
-//     return;
-//   }
-
-//   if (Object.keys(cart).length === 0) {
-//     alert("Your cart is empty");
-//     return;
-//   }
-
-//   // SHOW SPINNER
-//   showLoading("Sending your order… 🚀<br>Please hold on");
-
-//   // OPTIONAL: disable submit button
-//   const submitBtn = document.querySelector('#cartModal button[onclick="submitOrder()"]');
-//   if (submitBtn) submitBtn.disabled = true;
-
-//   const items = Object.keys(cart).map(barcode => ({
-//     barcode,
-//     qty: cart[barcode].qty
-//   }));
-
-//   fetch(API, {
-//     method: 'POST',
-//     body: JSON.stringify({
-//       action: 'createOrder',
-//       customer: name,
-//       items
-//     })
-//   })
-//   .then(res => res.json())
-//   .then(() => {
-//     hideLoading();
-//     alert('Order sent successfully ✅');
-
-//     // clear cart + storage
-//     cart = {};
-//     localStorage.removeItem('cart');
-
-//     location.reload();
-//   })
-//   .catch(err => {
-//     console.error(err);
-//     hideLoading();
-//     alert('Failed to send order ❌');
-
-//     if (submitBtn) submitBtn.disabled = false;
-//   });
-// }
-
-function submitOrderToFireBase() {
-  const name = document.getElementById('customerName').value;
-  const email = document.getElementById("customerEmail").value;
-  const phone = document.getElementById("customerPhone").value;
-  const store = document.getElementById("customerStore").value;
-  const address = document.getElementById("customerAddress").value;
-  const isReturn = document.getElementById("isReturnOrder").checked
-
-  const items = Object.keys(cart).map(barcode => ({
-    barcode,
-    qty: cart[barcode].qty,
-    price: stripIlsSymbol(cart[barcode].price)
-  }));
-
-  showLoading("Sending order…");
-
-  db.collection("orders").add({
-    customer: name,
-    email:email,
-    phone:phone,
-    store:store,
-    address:address,
-    status: "PENDING",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    isReturn:isReturn,
-    items
-  })
-  .then(() => {
-    cart = {};
-    localStorage.removeItem('cart');
-    hideLoading();
-    alert("Order sent successfully!");
-    location.reload()
-  })
-  .catch(err => {
-    hideLoading();
-    alert("Failed to send order");
-    console.error(err);
-  });
-}
-
-
-
-function showLoading(message = "Friendly hold on 🙂<br>We’re loading things for you...") {
-  const overlay = document.getElementById('loadingOverlay');
-  overlay.querySelector('p').innerHTML = message;
-  overlay.classList.remove('hidden');
-}
-
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.add('hidden');
-}
-
-
-
-
-
-
-
+</html>
